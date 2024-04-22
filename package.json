@@ -24,5 +24,14 @@
   },
   "peerDependencies": {
     "koishi": "^4.17.2"
+  },
+  "koishi": {
+    "description": {
+      "zh": "MC服务器RCON"
+    },
+    "service": {
+      "required": ["database"]
+    },
+    "locales": ["zh"]
   }
 }

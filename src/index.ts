@@ -1,7 +1,5 @@
 import { Context, Schema, Logger } from 'koishi'
-// import {} from '@koishijs/plugin-adapter-satori'
 import { MCQQ } from './mcqq';
-const koi = require('koishi')
 
 declare module 'koishi' {
     interface Tables {
@@ -12,7 +10,8 @@ declare module 'koishi' {
         player: string
     }
 }
-export const name = 'cpuz'
+
+export const name = 'mcqq'
 export const inject = ['database']
 export interface Config { }
 export const Config: Schema<Config> = Schema.object({})
@@ -74,12 +73,6 @@ export function apply(ctx: Context) {
         .action(async ({ session }, message) => {
             session.send(await initialMcUserTable(ctx));
         });
-    // ctx.command('测试')
-    //     .action(async ({ session }, message) => {
-    //         session.send("channelId" + session.channelId);
-    //         session.send("guildId" + session.guildId);
-    //         mcqq.sendMessage(message);
-    //     });
     ctx.command('send <message:text>')
         .action(async ({ session }, message) => {
             session.send(await mcqq.exec(message));
@@ -105,12 +98,6 @@ export function apply(ctx: Context) {
                 session.send("一个QQ只能绑定一个MC账号。");
             }
         });
-    // ctx.command('重载')
-    //     .action(async ({ session }, message) => {
-    //         await ctx.database.drop('mcusers');
-    //         await initialMcUserTable(ctx);
-    //         session.send("重载成功，Debug阶段使用");
-    //     });
     ctx.command('查询')
         .action(async ({ session }, message) => {
             if (ctx.model.tables.mcusers == undefined) {
@@ -122,5 +109,16 @@ export function apply(ctx: Context) {
             }
             session.send("当前绑定用户: " + results[0].player);
         });
-    
+    // ctx.command('重载')
+    //     .action(async ({ session }, message) => {
+    //         await ctx.database.drop('mcusers');
+    //         await initialMcUserTable(ctx);
+    //         session.send("重载成功，Debug阶段使用");
+    //     });
+    // ctx.command('测试')
+    //     .action(async ({ session }, message) => {
+    //         session.send("channelId" + session.channelId);
+    //         session.send("guildId" + session.guildId);
+    //         mcqq.sendMessage(message);
+    //     });
 }
