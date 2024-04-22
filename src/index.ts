@@ -1,5 +1,5 @@
 import { Context, Schema, Logger } from 'koishi'
-import {} from '@koishijs/plugin-adapter-satori'
+// import {} from '@koishijs/plugin-adapter-satori'
 import { MCQQ } from './mcqq';
 const koi = require('koishi')
 
@@ -68,8 +68,7 @@ async function getUser(ctx: Context, user) {
 
 export function apply(ctx: Context) {
 
-
-    mcqq = new MCQQ(ctx, 11223, "liert");
+    mcqq = new MCQQ(11223, "liert");
     log.info("RCON服务[11223]");
     ctx.command('初始化')
         .action(async ({ session }, message) => {

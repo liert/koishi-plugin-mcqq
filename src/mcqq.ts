@@ -1,13 +1,13 @@
-import { WebSocket, WebSocketServer } from 'ws';
-import { Context, Logger } from 'koishi'
+// import { WebSocket, WebSocketServer } from 'ws';
+// import { Context, Logger } from 'koishi'
 import Rcon from 'rcon-ts';
 
-const log = new Logger("MCQQ");
+// const log = new Logger("MCQQ");
 export class MCQQ {
     // private wss: WebSocketServer;
     private rcon: Rcon;
 
-    constructor(ctx:Context, port: number, password: string) {
+    constructor(port: number, password: string) {
         this.rcon = new Rcon({
             host: "127.0.0.1",
             port: port, 
@@ -34,7 +34,12 @@ export class MCQQ {
         // });
         // log.info(`WebSocket server started at ws://localhost:${port}`);
     }
-
+    public exec(command: string) {
+        return this.rcon.send(command);
+    }
+    public close(){
+        this.rcon.disconnect();
+    }
     // 向所有连接的客户端广播消息
     // public sendMessage(message: string): void {
     //     this.wss.clients.forEach((client: WebSocket) => {
@@ -43,10 +48,5 @@ export class MCQQ {
     //         }
     //     });
     // }
-    public exec(command: string) {
-        return this.rcon.send(command);
-    }
-    public close(){
-        this.rcon.disconnect();
-    }
+    
 }
