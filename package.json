@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-mcqq",
   "description": "mcqq",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/liert/koishi-plugin-mcqq.git"
@@ -15,7 +15,7 @@
   "license": "MIT",
   "scripts": {},
   "keywords": [
-    "chatbot",
+    "MC",
     "koishi",
     "plugin"
   ],
@@ -23,14 +23,15 @@
     "rcon-ts": "^1.2.3"
   },
   "peerDependencies": {
-    "koishi": "^4.17.2"
+    "koishi": "^4.17.2",
+    "rcon-ts": "^1.2.3"
+  },
+  "dependencies": {
+    "rcon-ts": "^1.2.3"
   },
   "koishi": {
     "description": {
       "zh": "MC服务器RCON"
-    },
-    "service": {
-      "required": ["database"]
     },
     "locales": ["zh"]
   }

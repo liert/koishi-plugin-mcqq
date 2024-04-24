@@ -1,11 +1,11 @@
 import Rcon from 'rcon-ts';
 
-export class MCQQ {
+export class RCON {
     private rcon: Rcon;
 
-    constructor(port: number, password: string) {
+    constructor(host: string, port: number, password: string) {
         this.rcon = new Rcon({
-            host: "127.0.0.1",
+            host: host,
             port: port, 
             password: password,
             timeout: 5000

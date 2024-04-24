@@ -1,124 +1,138 @@
-import { Context, Schema, Logger } from 'koishi'
-import { MCQQ } from './mcqq';
-
-declare module 'koishi' {
-    interface Tables {
-        mcusers: Users
-    }
-    interface Users {
-        name: string
-        player: string
-    }
-}
+import { Context, Schema, Logger, h } from 'koishi'
+import { RCON } from './rcon';
+import { Ws } from './ws';
 
 export const name = 'mcqq'
-export const inject = ['database']
-export interface Config { }
-export const Config: Schema<Config> = Schema.object({})
-const token = '03c6a26425fe97097eb8aa60be3c838fd48150034d6e03881f1ea6685bc36f1b'
-const headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-    "Content-Type": "application/json"
+export interface Config { 
+    RconHost: string,
+    RconPort: number,
+    RconPassword: string,
+    WsEnable: boolean,
+    WsPort: number,
+    Bot: string,
+    QQGroup: string,
+    whitelist: string,
+    unwhitelist: string
 }
+
+export const Config: Schema<Config> = Schema.intersect([
+    Schema.object({
+        RconHost: Schema.string().default("127.0.0.1").description('RCON服务IP'),
+        RconPort: Schema.number().description('RCON服务端口'),
+        RconPassword: Schema.string().description('RCON服务密码'),
+    }).description('RCON'),
+    Schema.object({
+        WsEnable: Schema.boolean().description('WebScoket').default(false),
+        WsPort: Schema.number().description('WebScoket服务端口'),
+        Bot: Schema.string().description('机器人QQ账号[只支持 Chronocat]').default("3759400284"),
+        QQGroup: Schema.string().description('群聊账号').default("707019626"),
+    }).description('WebScoket'),
+    Schema.object({
+        whitelist: Schema.string().description('添加白名单指令').default("添加白名单"),
+        unwhitelist: Schema.string().description('删除白名单指令').default("删除白名单")
+    }).description('指令'),
+])
+
+declare module 'koishi' {
+}
+
 const log = new Logger(name);
-let mcqq: MCQQ;
+let rcon: RCON;
 
-async function initialMcUserTable(ctx: Context) {
-    try{
-        if (ctx.model.tables.mcusers == undefined) {
-            ctx.model.extend('mcusers', {
-                name: { type: 'string' },
-                player: { type: 'string' },
-            }, {
-                primary: 'name',
-                unique: ['name'],
-            })
-            return "初始化成功"
-        }
-    } catch {
-        return "初始化失败"
-    }
-    return "已完成初始化"
-}
-
-async function getUser(ctx: Context, user) {
-    try {
-        const response = await ctx.http.post("http://127.0.0.1/koishi/API", {
-            token: token,
-            user: user,
-			mode: "getUser"
-        }, {
-            timeout: 0,
-            headers: headers,
-        });
-        if (typeof response === 'string') {
-            return response;
-        } else if (response.code === 0) {
-            return false;
-        } else if (response.code === 1) {
-            return true;
-        }
-        return "未知错误，请联系管理员";
-    } catch (e) {
-        log.error(e);
-        return "连接失败";
-    }
-}
-
-export function apply(ctx: Context) {
-
-    mcqq = new MCQQ(11223, "liert");
-    log.info("RCON服务[11223]");
-    ctx.command('初始化')
+export function apply(ctx: Context, config: Config) {
+    var ws: Ws = new Ws(ctx, config.WsPort, config);
+    ctx.command('rcon <message>')
         .action(async ({ session }, message) => {
-            session.send(await initialMcUserTable(ctx));
-        });
-    ctx.command('send <message:text>')
-        .action(async ({ session }, message) => {
-            session.send(await mcqq.exec(message));
-        });
-    ctx.command('绑定 <message>')
-        .action(async ({ session }, message) => {
-            try {
-                if (ctx.model.tables.mcusers == undefined) {
-                    return session.send("数据库未初始化");
+            if (message == "connect") {
+                rcon = new RCON(config.RconHost, config.RconPort, config.RconPassword);
+                if (rcon == undefined) {
+                    session.send(`连接失败，请检查服务器RCON`);
+                    return;
                 }
-                const result = await getUser(ctx, message);
-                if (typeof(result) === 'string') {
-                    return session.send(result)
+                session.send(`已连接`);
+            } else if (message == "stop") {
+                if (rcon == undefined) {
+                    session.send(`未连接`);
+                }else{
+                    rcon.close();
+                    session.send(`断开连接`);
                 }
-                if (result) {
-                    await ctx.database.create('mcusers', { name: session.userId, player: message });
-                    session.send("绑定成功: " + message);
-                } else {
-                    session.send("用户 " + message + " 未在服务器注册");
+            } else if (message == "re") {
+                rcon = new RCON(config.RconHost, config.RconPort, config.RconPassword);
+                if (rcon != undefined) {
+                    session.send(`重新连接`);
                 }
-                
-            } catch (error) {
-                session.send("一个QQ只能绑定一个MC账号。");
+            } else {
+                if (rcon == undefined) {
+                    session.send(`未连接`);
+                }else{
+                    session.send(`已连接`);
+                }
             }
         });
-    ctx.command('查询')
+    ctx.command('rcon <message>')
         .action(async ({ session }, message) => {
-            if (ctx.model.tables.mcusers == undefined) {
-                return session.send("数据库未初始化");
+            if (message == "connect") {
+                rcon = new RCON(config.RconHost, config.RconPort, config.RconPassword);
+                if (rcon == undefined) {
+                    session.send(`连接失败，请检查服务器RCON`);
+                    return;
+                }
+                session.send(`已连接`);
+            } else if (message == "stop") {
+                if (rcon == undefined) {
+                    session.send(`未连接`);
+                }else{
+                    rcon.close();
+                    session.send(`断开连接`);
+                }
+            } else if (message == "re") {
+                rcon = new RCON(config.RconHost, config.RconPort, config.RconPassword);
+                if (rcon != undefined) {
+                    session.send(`重新连接`);
+                }
+            } else {
+                if (rcon == undefined) {
+                    session.send(`未连接`);
+                }else{
+                    session.send(`已连接`);
+                }
             }
-            const results = await ctx.database.get('mcusers', {name: session.userId});
-            if (results.length == 0) {
-                return session.send('未绑定用户');
-            }
-            session.send("当前绑定用户: " + results[0].player);
         });
-    // ctx.command('重载')
-    //     .action(async ({ session }, message) => {
-    //         await ctx.database.drop('mcusers');
-    //         await initialMcUserTable(ctx);
-    //         session.send("重载成功，Debug阶段使用");
-    //     });
-    // ctx.command('测试')
-    //     .action(async ({ session }, message) => {
-    //         session.send("channelId" + session.channelId);
-    //         session.send("guildId" + session.guildId);
-    //         mcqq.sendMessage(message);
-    //     });
+    ctx.command(`${config.whitelist} <message:text>`)
+        .action(async ({ session }, message) => {
+            if (rcon == undefined) {
+                session.send(`未连接`);
+            }else{
+                if (message != undefined){
+                    session.send(h.at(session.userId) + " " + await rcon.exec(`wl add ${session.userId} ${message}`));
+                    return;
+                }
+                session.send(h.at(session.userId) + ` ${config.whitelist} <id>`);
+            }
+        });
+    ctx.command(`${config.unwhitelist} <message:text>`, { authority: 4})
+        .action(async ({ session }, message) => {
+            if (rcon == undefined) {
+                session.send(`未连接`);
+            }else{
+                if (message != undefined){
+                    session.send(h.at(session.userId) + " " + await rcon.exec(`wl del ${session.userId} ${message}`));
+                    return;
+                }
+                session.send(h.at(session.userId) + ` ${config.unwhitelist} <id>`);
+            }
+        });
+    ctx.command('exec <message:text>', { authority: 4})
+        .action(async ({ session }, message) => {
+            if (rcon == undefined) {
+                session.send(`连接失败，请检查服务器RCON`);
+            }else{
+                session.send(h.at(session.userId) + " " + await rcon.exec(message));
+            }
+        });
+    ctx.command('测试')
+        .action(async ({ session }, message) => {
+            session.send(h.at(session.userId));
+        });
 }
