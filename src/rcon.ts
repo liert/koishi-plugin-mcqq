@@ -18,4 +18,8 @@ export class RCON {
     public close(){
         this.rcon.disconnect();
     }
+    public static getRcon(config) {
+        var rcon = new RCON(config.RconHost, config.RconPort, config.RconPassword);
+        return rcon;
+    }
 }

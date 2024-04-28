@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-mcqq",
-  "description": "mcqq",
-  "version": "0.0.5",
+  "description": "该插件和MC插件[MCQQ]同步更新的，出现问题请同时更新两个插件，如有问题可以发Issue",
+  "version": "0.0.9",
   "repository": {
     "type": "git",
     "url": "https://github.com/liert/koishi-plugin-mcqq.git"
@@ -31,7 +31,7 @@
   },
   "koishi": {
     "description": {
-      "zh": "MC服务器RCON"
+      "zh": "MC服务器RCON\n配合MC服务器插件MCQQ使用,插件在GitHub!"
     },
     "locales": ["zh"]
   }
